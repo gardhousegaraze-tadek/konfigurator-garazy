@@ -95,6 +95,11 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
     const area = (config.width / 100) * (config.length / 100);
     totalBase += area * baseM2Price;
 
+    if (config.hasCarport && config.carportWidth) {
+      const carportArea = (config.carportWidth / 100) * (config.length / 100);
+      totalBase += carportArea * safeNum(pricing.attached_carport_sqm_v);
+    }
+
     if (config.gutters) {
       let gutterMeters = 0;
       if (config.roofType === 'dual-slope') gutterMeters = (config.length / 100) * 2; 
@@ -109,8 +114,8 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
       }
       if (el.type === 'window' || el.type === 'pvc-window') {
         if (el.width === 80 && el.height === 60) totalBase += safeNum(pricing.win_80x60);
-        else if (el.width === 180 && el.height === 40) totalBase += safeNum(pricing.win_40x180);
-        else if (el.width === 180 && el.height === 60) totalBase += safeNum(pricing.win_60x180);
+        else if (el.width === 40 && el.height === 180) totalBase += safeNum(pricing.win_40x180);
+        else if (el.width === 60 && el.height === 180) totalBase += safeNum(pricing.win_60x180);
       }
       if (el.type === 'gate') {
         if (el.gateType === 'up-and-over') {
@@ -452,7 +457,7 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
             
             <div className="space-y-4 mb-3">
               <div className="mb-2">
-                <label className="text-[10px] text-zinc-500 font-bold uppercase mb-1 block">Wymiar Bramy (Wysokość x Szerokość)</label>
+                <label className="text-[10px] text-zinc-500 font-bold uppercase mb-1 block">Wymiar Bramy (Wys x Szer)</label>
                 <select 
                   disabled={isReadOnly}
                   value={`${gate.width}x${gate.height}`}
@@ -551,7 +556,7 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
                   <div className="space-y-4">
                     {(el.type === 'window' || el.type === 'pvc-window') ? (
                       <div className="mb-2">
-                        <label className="text-[10px] text-zinc-500 font-bold uppercase mb-1 block">Wymiar Okna (Wysokość x Szerokość)</label>
+                        <label className="text-[10px] text-zinc-500 font-bold uppercase mb-1 block">Wymiar Okna (Wys x Szer)</label>
                         <select 
                           disabled={isReadOnly}
                           value={`${el.width}x${el.height}`}
@@ -561,9 +566,9 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
                           }}
                           className="w-full border-zinc-300 rounded-lg p-2 text-sm bg-zinc-50 disabled:opacity-80"
                         >
-                          <option value="80x60" disabled={wallW < 80 || config.height < 60 + 20}>Wys: 60 x Szer: 80 cm</option>
-                          <option value="180x40" disabled={wallW < 180 || config.height < 40 + 20}>Wys: 40 x Szer: 180 cm</option>
-                          <option value="180x60" disabled={wallW < 180 || config.height < 60 + 20}>Wys: 60 x Szer: 180 cm</option>
+                          <option value="80x60" disabled={wallW < 80 + 10 || config.height < 60 + 20}>Wys: 60 x Szer: 80 cm</option>
+                          <option value="40x180" disabled={wallW < 40 + 10 || config.height < 180 + 20}>Wys: 180 x Szer: 40 cm</option>
+                          <option value="60x180" disabled={wallW < 60 + 10 || config.height < 180 + 20}>Wys: 180 x Szer: 60 cm</option>
                         </select>
                       </div>
                     ) : el.type === 'skylight' ? (
@@ -632,7 +637,6 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
               <input type="checkbox" disabled={isReadOnly} checked={config.extraOptions?.includes('roofTile')} onChange={(e) => { const next = e.target.checked ? [...(config.extraOptions || []), 'roofTile'] : (config.extraOptions || []).filter(x => x !== 'roofTile'); updateConfig('extraOptions' as any, next); }} className="w-5 h-5 rounded border-zinc-300 text-[var(--theme)] focus:ring-[var(--theme)] disabled:opacity-50" />
               <span className="text-sm font-semibold text-zinc-700">Dach: Blachodachówka</span>
             </div>
-            {/* JEDNOSTKA UKRYTA - OBLICZA DOKŁADNĄ KWOTĘ W LOKALNYM ZAKRESIE */}
             <span className="text-xs font-bold text-[var(--theme)] bg-[var(--theme)]/10 px-2 py-1 rounded">
               +{Math.round((config.width / 100) * (config.length / 100) * safeNum(pricing.roof_tile_v))} zł
             </span>

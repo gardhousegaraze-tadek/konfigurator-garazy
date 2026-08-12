@@ -172,7 +172,10 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
       const addon = customAddons.find((a: any) => a.id === addonId);
       if (addon) {
         if (addon.type === 'fixed') customAddonTotal += safeNum(addon.price);
-        if (addon.type === 'pct') percentFinalMultiplier += (safeNum(addon.price) / 100);
+        else if (addon.type === 'pct' || addon.type === 'pct_total') percentFinalMultiplier += (safeNum(addon.price) / 100);
+        else if (addon.type === 'pct_base') percentBaseMultiplier += (safeNum(addon.price) / 100);
+        else if (addon.type === 'm2') customAddonTotal += area * safeNum(addon.price);
+        else if (addon.type === 'mb') customAddonTotal += ((config.width / 100) + (config.length / 100)) * 2 * safeNum(addon.price);
       }
     });
 
@@ -368,7 +371,7 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
 
       <Section title="Wymiary Główne" icon={<Maximize size={20} />}>
         <div className="space-y-6">
-          {[{ label: 'Szerokość', key: 'width' as const, min: 200, max: 800, step: 10 }, { label: 'Długość', key: 'length' as const, min: 300, max: 1000, step: 10 }, { label: `Wysokość (Dopłata +10% za każde 10cm powyżej ${appData?.baseConfig?.h || 210}cm)`, key: 'height' as const, min: 200, max: 350, step: 10 }].map(dim => (
+        {[{ label: 'Szerokość', key: 'width' as const, min: 200, max: 800, step: 10 }, { label: 'Długość', key: 'length' as const, min: 300, max: 1000, step: 10 }, { label: 'Wysokość', key: 'height' as const, min: 200, max: 350, step: 10 }].map(dim => (
             <div key={dim.key}>
               <div className="flex justify-between mb-2 text-sm font-semibold text-zinc-700"><label>{dim.label}</label><span className="bg-white px-2 py-1 rounded border text-[var(--theme)] font-bold">{config[dim.key]} cm</span></div>
               {!isReadOnly && <input type="range" min={dim.min} max={dim.max} step={dim.step} value={config[dim.key]} onChange={(e) => updateConfig(dim.key, Number(e.target.value))} className="w-full" style={{accentColor: 'var(--theme)'}} />}
@@ -674,13 +677,18 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
 
           {customAddons.map((opt: any) => {
             const isActive = (config.extraOptions || []).includes(opt.id);
+            let priceLabel = `+${safeNum(opt.price)} zł`;
+            if (opt.type === 'pct' || opt.type === 'pct_total' || opt.type === 'pct_base') priceLabel = `+${safeNum(opt.price)}%`;
+            else if (opt.type === 'm2') priceLabel = `+${safeNum(opt.price)} zł / m²`;
+            else if (opt.type === 'mb') priceLabel = `+${safeNum(opt.price)} zł / mb`;
+
             return (
               <label key={opt.id} className={`flex items-center justify-between p-3 rounded-lg border border-zinc-200 hover:bg-zinc-50 transition-colors bg-white shadow-sm ${isReadOnly ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'}`}>
                 <div className="flex items-center gap-3">
                   <input type="checkbox" disabled={isReadOnly} checked={isActive} onChange={(e) => { const next = e.target.checked ? [...(config.extraOptions || []), opt.id] : (config.extraOptions || []).filter(x => x !== opt.id); updateConfig('extraOptions' as any, next); }} className="w-5 h-5 rounded border-zinc-300 text-[var(--theme)] focus:ring-[var(--theme)] disabled:opacity-50" />
                   <span className="text-sm font-semibold text-zinc-700">{opt.label}</span>
                 </div>
-                <span className="text-xs font-bold text-zinc-500 bg-zinc-100 px-2 py-1 rounded">{opt.type === 'pct' ? `+${safeNum(opt.price)}%` : `+${safeNum(opt.price)} zł`}</span>
+                <span className="text-xs font-bold text-zinc-500 bg-zinc-100 px-2 py-1 rounded">{priceLabel}</span>
               </label>
             );
           })}

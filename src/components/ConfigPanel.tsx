@@ -453,13 +453,13 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
                 if (nType === 'sectional' && nWidth < 300) nWidth = 300;
                 setSelectedWall('front'); 
                 updateElement(gate.id, { gateType: nType, width: nWidth, height: 200, isOpen: false }); 
-              }} className="text-sm border-zinc-300 rounded-lg p-1 bg-zinc-50 disabled:opacity-80">
+              }} className="text-sm border-zinc-300 rounded-lg p-1 bg-zinc-50 text-zinc-900 font-bold disabled:opacity-80">
                 <option value="up-and-over">Uchylna</option><option value="sectional">Segmentowa</option>
               </select>
             </div>
             
             <div className="space-y-4 mb-3">
-              <div className="mb-2">
+            <div className="mb-2">
                 <label className="text-[10px] text-zinc-500 font-bold uppercase mb-1 block">Wymiar Bramy (Wys x Szer)</label>
                 <select 
                   disabled={isReadOnly}
@@ -468,22 +468,31 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
                     const [w, h] = e.target.value.split('x').map(Number); 
                     updateElement(gate.id, { width: w, height: h }); 
                   }}
-                  className="w-full border-zinc-300 rounded-lg p-2 text-sm bg-zinc-50 disabled:opacity-80"
+                  className="w-full border-zinc-300 rounded-lg p-2 text-sm bg-zinc-50 text-zinc-900 font-bold disabled:opacity-80 focus:ring-2 focus:ring-[var(--theme)]"
                 >
-                  {gate.gateType === 'up-and-over' ? (
-                    <>
-                      <option value="200x200" disabled={config.width < 200 + 10}>Wys: 200 x Szer: 200 cm</option>
-                      <option value="300x200" disabled={config.width < 300 + 10}>Wys: 200 x Szer: 300 cm</option>
-                      <option value="400x200" disabled={config.width < 400 + 10}>Wys: 200 x Szer: 400 cm</option>
-                      <option value="500x200" disabled={config.width < 500 + 10}>Wys: 200 x Szer: 500 cm</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="300x200" disabled={config.width < 300 + 10}>Wys: 200 x Szer: 300 cm</option>
-                      <option value="400x200" disabled={config.width < 400 + 10}>Wys: 200 x Szer: 400 cm</option>
-                      <option value="500x200" disabled={config.width < 500 + 10}>Wys: 200 x Szer: 500 cm</option>
-                    </>
-                  )}
+                  {(() => {
+                    const otherGatesWidth = config.elements.filter(e => e.wall === gate.wall && e.id !== gate.id).reduce((sum, e) => sum + e.width + 20, 0);
+                    const availableWidth = config.width - otherGatesWidth;
+                    
+                    if (gate.gateType === 'up-and-over') {
+                      return (
+                        <>
+                          <option value="200x200" disabled={200 + 20 > availableWidth}>Wys: 200 x Szer: 200 cm</option>
+                          <option value="300x200" disabled={300 + 20 > availableWidth}>Wys: 200 x Szer: 300 cm</option>
+                          <option value="400x200" disabled={400 + 20 > availableWidth}>Wys: 200 x Szer: 400 cm</option>
+                          <option value="500x200" disabled={500 + 20 > availableWidth}>Wys: 200 x Szer: 500 cm</option>
+                        </>
+                      );
+                    } else {
+                      return (
+                        <>
+                          <option value="300x200" disabled={300 + 20 > availableWidth}>Wys: 200 x Szer: 300 cm</option>
+                          <option value="400x200" disabled={400 + 20 > availableWidth}>Wys: 200 x Szer: 400 cm</option>
+                          <option value="500x200" disabled={500 + 20 > availableWidth}>Wys: 200 x Szer: 500 cm</option>
+                        </>
+                      );
+                    }
+                  })()}
                 </select>
               </div>
               
@@ -557,7 +566,7 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
                   </div>
 
                   <div className="space-y-4">
-                    {(el.type === 'window' || el.type === 'pvc-window') ? (
+                  {(el.type === 'window' || el.type === 'pvc-window') ? (
                       <div className="mb-2">
                         <label className="text-[10px] text-zinc-500 font-bold uppercase mb-1 block">Wymiar Okna (Wys x Szer)</label>
                         <select 
@@ -567,11 +576,19 @@ export default function ConfigPanel({ config, setConfig, selectedWall, setSelect
                             const [w, h] = e.target.value.split('x').map(Number); 
                             updateElement(el.id, { width: w, height: h }); 
                           }}
-                          className="w-full border-zinc-300 rounded-lg p-2 text-sm bg-zinc-50 disabled:opacity-80"
+                          className="w-full border-zinc-300 rounded-lg p-2 text-sm bg-zinc-50 text-zinc-900 font-bold disabled:opacity-80 focus:ring-2 focus:ring-[var(--theme)]"
                         >
-                          <option value="80x60" disabled={wallW < 80 + 10 || config.height < 60 + 20}>Wys: 60 x Szer: 80 cm</option>
-                          <option value="40x180" disabled={wallW < 40 + 10 || config.height < 180 + 20}>Wys: 180 x Szer: 40 cm</option>
-                          <option value="60x180" disabled={wallW < 60 + 10 || config.height < 180 + 20}>Wys: 180 x Szer: 60 cm</option>
+                          {(() => {
+                            const otherElemsWidth = config.elements.filter(e => e.wall === el.wall && e.id !== el.id).reduce((sum, e) => sum + e.width + 20, 0);
+                            const availableWidth = wallW - otherElemsWidth;
+                            return (
+                              <>
+                                <option value="80x60" disabled={availableWidth < 80 + 20 || config.height < 60 + 20}>Wys: 60 x Szer: 80 cm</option>
+                                <option value="40x180" disabled={availableWidth < 40 + 20 || config.height < 180 + 20}>Wys: 180 x Szer: 40 cm</option>
+                                <option value="60x180" disabled={availableWidth < 60 + 20 || config.height < 180 + 20}>Wys: 180 x Szer: 60 cm</option>
+                              </>
+                            );
+                          })()}
                         </select>
                       </div>
                     ) : el.type === 'skylight' ? (
